@@ -230,8 +230,14 @@ public:
 
     typeof(this) opOpAssign(string op, Rhs)(Rhs rhs)
     if(op == "*" && isRational!Rhs) {
+        if (this.numerator == 0 || rhs.numerator == 0)
+        {
+            this.numerator = 0;
+            return this;
+        }
         // Cancel common factors first, then multiply.  This prevents
         // overflows and is much more efficient when using BigInts.
+        assert(rhs.denominator != 0);
         auto divisor = gcf(this.numerator, rhs.denominator);
         this.numerator /= divisor;
         rhs.denominator /= divisor;
@@ -873,10 +879,12 @@ if(isIntegerLike!I1 && isIntegerLike!I2) {
 
     // Work around Bug 4742.
     static if(is(I1 == I2)) {
+        assert(num2 != 0);
         auto remainder = num1 % num2;
     } else {
         typeof(return) workaround1 = num1;
         typeof(return) workaround2 = num2;
+        assert(workaround2 != 0);
         auto remainder = workaround1 % workaround2;
     }
 
@@ -996,4 +1004,9 @@ unittest {
     assert(round(rational(7, 2)) == 4);
     assert(round(rational(-3, 4)) == -1);
     assert(round(rational(8U, 15U)) == 1);
+}
+
+unittest
+{
+    assert(rational(0,1) * rational(1,1) == 0);
 }
